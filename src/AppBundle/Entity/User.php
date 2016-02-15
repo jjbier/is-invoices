@@ -30,7 +30,7 @@ class User extends BaseUser
      *
      * @Id()
      * @Column()
-     * @GeneratedValue()
+     * @GeneratedValue(strategy="AUTO")
      */
     protected $id;
 

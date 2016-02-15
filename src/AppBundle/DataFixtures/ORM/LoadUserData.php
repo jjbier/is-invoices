@@ -18,13 +18,32 @@ use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use AppBundle\Entity\User;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class LoadUserData
  * @package AppBundle\DataFixtures\ORM
  */
-class LoadUserData extends AbstractFixture implements OrderedFixtureInterface
+class LoadUserData extends AbstractFixture implements OrderedFixtureInterface, ContainerAwareInterface
 {
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
+    /**
+     * Sets the container.
+     *
+     * @param ContainerInterface|null $container A ContainerInterface instance or null
+     */
+    public function setContainer(ContainerInterface $container = null)
+    {
+        $this->container = $container;
+
+    }
+
+
     /**
      * Load data fixtures with the passed EntityManager
      *
@@ -32,16 +51,23 @@ class LoadUserData extends AbstractFixture implements OrderedFixtureInterface
      */
     public function load(ObjectManager $manager)
     {
-        $userAdmin = new User();
+        $userAdmin = $this->container->get('fos_user.user_manager')->createUser();
         $userAdmin->setUsername('admin');
-        $userAdmin->setPassword('admin');
+        $userAdmin->setPlainPassword('admin');
+        $userAdmin->setEmail('admin@sayma.lo');
+        $userAdmin->setEnabled(true);
         $userAdmin->setRoles(array('ROLE_ADMIN','ROLE_USER'));
         $manager->persist($userAdmin);
-        $userDemo = new User();
+
+        $userDemo = $this->container->get('fos_user.user_manager')->createUser();
+
         $userDemo->setUsername('demo');
-        $userDemo->setPassword('demo');
+        $userDemo->setPlainPassword('demo');
         $userDemo->setRoles(array('ROLE_USER'));
+        $userDemo->setEmail('demo@sayma.lo');
+        $userDemo->setEnabled(true);
         $manager->persist($userDemo);
+
         $manager->flush();
         $this->addReference('admin-user', $userAdmin);
         $this->addReference('demo-user', $userDemo);
