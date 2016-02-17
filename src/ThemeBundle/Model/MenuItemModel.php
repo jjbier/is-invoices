@@ -16,7 +16,7 @@ use Doctrine\Common\Collections\Collection;
  * Class MenuItemModel
  * @package ThemeBundle\Model
  */
-class MenuItemModel extends ThemeMenuItem
+class MenuItemModel implements MenuItemInterface
 {
     /**
      * @var integer
@@ -44,7 +44,7 @@ class MenuItemModel extends ThemeMenuItem
     protected $children;
 
     /**
-     * @var
+     * @var string
      */
     protected $icon;
 
@@ -59,20 +59,170 @@ class MenuItemModel extends ThemeMenuItem
     protected $parent;
 
     /**
-     * MenuItemModel constructor.
+     * @var array
      */
-    public function __construct()
-    {
-        $this->children = new ArrayCollection();
-    }
-
+    protected $routeArgs;
 
     /**
-     * @return integer
+     * @var string
+     */
+    protected $badgeColor;
+
+    /**
+     * MenuItemModel constructor.
+     *
+     * @param $id
+     * @param string $label
+     * @param string $route
+     * @param array $routeArgs
+     * @param bool $icon
+     * @param bool $badge
+     * @param string $badgeColor
+     */
+    public function __construct(
+        $id,
+        $label,
+        $route,
+        $routeArgs = array(),
+        $icon = false,
+        $badge = false,
+        $badgeColor = 'green'
+    ) {
+        $this->badge = $badge;
+        $this->icon = $icon;
+        $this->identifier = $id;
+        $this->label = $label;
+        $this->route = $route;
+        $this->routeArgs = $routeArgs;
+        $this->badgeColor = $badgeColor;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBadge()
+    {
+        return $this->badge;
+    }
+
+    /**
+     * @param mixed $badge
+     *
+     * @return $this
+     */
+    public function setBadge($badge)
+    {
+        $this->badge = $badge;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getChildren()
+    {
+        return $this->children;
+    }
+
+    /**
+     * @param array $children
+     */
+    public function setChildren($children)
+    {
+        $this->children = $children;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIcon()
+    {
+        return $this->icon;
+    }
+
+    /**
+     * @param mixed $icon
+     *
+     * @return $this
+     */
+    public function setIcon($icon)
+    {
+        $this->icon = $icon;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
      */
     public function getIdentifier()
     {
-        $this->identifier;
+        return $this->identifier;
+    }
+
+    /**
+     * @param mixed $identifier
+     *
+     * @return $this
+     */
+    public function setIdentifier($identifier)
+    {
+        $this->identifier = $identifier;
+
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsActive()
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param boolean $isActive
+     *
+     * @return $this
+     */
+    public function setIsActive($isActive)
+    {
+        if ($this->hasParent()) {
+            $this->getParent()->setIsActive($isActive);
+        }
+
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasParent()
+    {
+        return ($this->parent instanceof MenuItemInterface);
+    }
+
+    /**
+     * @return \Avanzu\AdminThemeBundle\Model\MenuItemInterface
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+
+    /**
+     * @param \Avanzu\AdminThemeBundle\Model\MenuItemInterface $parent
+     *
+     * @return $this
+     */
+    public function setParent(MenuItemInterface $parent = null)
+    {
+        $this->parent = $parent;
+
+        return $this;
     }
 
     /**
@@ -84,6 +234,18 @@ class MenuItemModel extends ThemeMenuItem
     }
 
     /**
+     * @param string $label
+     *
+     * @return $this
+     */
+    public function setLabel($label)
+    {
+        $this->label = $label;
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getRoute()
@@ -92,48 +254,53 @@ class MenuItemModel extends ThemeMenuItem
     }
 
     /**
-     * @return boolean
-     */
-    public function isActive()
-    {
-        return $this->isActive;
-    }
-
-    /**
-     * @param boolean $isActive
+     * @param string $route
      *
-     * @return MenuItemInterface
+     * @return $this
      */
-    public function setIsActive($isActive)
+    public function setRoute($route)
     {
-        $this->isActive = $isActive;
+        $this->route = $route;
 
         return $this;
     }
 
     /**
-     * @return boolean
+     * @return array
      */
-    public function hasChildren()
+    public function getRouteArgs()
     {
-        return count($this->children) > 0;
+        return $this->routeArgs;
     }
 
     /**
-     * @return MenuItemInterface[]
+     * @param array $routeArgs
+     *
+     * @return $this
      */
-    public function getChildren()
+    public function setRouteArgs($routeArgs)
     {
-        return $this->children;
+        $this->routeArgs = $routeArgs;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasChildren()
+    {
+        return (sizeof($this->children) > 0);
     }
 
     /**
      * @param MenuItemInterface $child
      *
-     * @return MenuItemInterface
+     * @return $this
      */
     public function addChild(MenuItemInterface $child)
     {
+        $child->setParent($this);
         $this->children[] = $child;
 
         return $this;
@@ -142,61 +309,35 @@ class MenuItemModel extends ThemeMenuItem
     /**
      * @param MenuItemInterface $child
      *
-     * @return MenuItemInterface
+     * @return $this
      */
     public function removeChild(MenuItemInterface $child)
     {
-        // TODO: Implement removeChild() method.
+        if (false !== ($key = array_search($child, $this->children))) {
+            unset ($this->children[$key]);
+        }
+
+        return $this;
     }
 
     /**
-     * @return mixed
-     */
-    public function getIcon()
-    {
-        // TODO: Implement getIcon() method.
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getBadge()
-    {
-        // TODO: Implement getBadge() method.
-    }
-
-    /**
-     * @return mixed
+     * @return string
      */
     public function getBadgeColor()
     {
-        // TODO: Implement getBadgeColor() method.
+        return $this->badgeColor;
     }
 
     /**
-     * @return mixed
-     */
-    public function getParent()
-    {
-        // TODO: Implement getParent() method.
-    }
-
-    /**
-     * @return mixed
-     */
-    public function hasParent()
-    {
-        // TODO: Implement hasParent() method.
-    }
-
-    /**
-     * @param MenuItemInterface $parent
+     * @param string $badgeColor
      *
-     * @return mixed
+     * @return $this
      */
-    public function setParent(MenuItemInterface $parent = null)
+    public function setBadgeColor($badgeColor)
     {
-        // TODO: Implement setParent() method.
+        $this->badgeColor = $badgeColor;
+
+        return $this;
     }
 
     /**
@@ -204,6 +345,21 @@ class MenuItemModel extends ThemeMenuItem
      */
     public function getActiveChild()
     {
-        // TODO: Implement getActiveChild() method.
+        foreach ($this->children as $child) {
+            if ($child->isActive()) {
+                return $child;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * IS menu item active
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->isActive;
     }
 }

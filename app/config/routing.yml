@@ -1,6 +1,6 @@
-theme:
-    resource: "@ThemeBundle/Resources/config/routing.xml"
-    prefix:   /
+#theme:
+#    resource: "@ThemeBundle/Resources/config/routing.xml"
+#    prefix:   /
 
 app:
     resource: "@AppBundle/Controller/"
